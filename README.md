@@ -23,15 +23,12 @@ Asynchronous Scalable Sketch-to-Image Generation Service
 	7.	MinIO (Object Storage) : Stores input sketches, intermediate assets, and generated images
 	8.	Gallery Service / Retrieval Layer : Allows users to browse, retrieve, and manage their generated artworks
 	9.	Monitoring & Logging Stack : Collects logs, metrics, and health signals for reliability
-	10.	CI/CD Pipeline : Builds, stores, and deploys containerized services
 
 - Hardware / Cloud Infrastructure
 	1.	Google Cloud Platform (GCP)
 	2.	Google Kubernetes Engine (GKE)
 	3.	Compute Engine Node Pools for API and worker workloads
 	4.	GPU Node Pool for generative model inference
-	5.	Artifact Registry for container images
-	6.	Secret Manager for credentials and API keys
 
 
 ## Architecture Diagram
