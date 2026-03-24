@@ -32,39 +32,38 @@ A Scalable Sketch-to-Image Generation Service
 ## Debugging and Testing Strategy
 
 - We will use multiple debugging strategies:
-  (1) kubectl logs to inspect logs from REST and Worker pods
-  (2) Redis queue inspection (LRANGE) to verify job flow
-  (3) MinIO bucket inspection to verify input/output files
-  (4) Port-forwarding for local debugging
-  (5) Logging system (Redis logging channel)
+  1. kubectl logs to inspect logs from REST and Worker pods
+  2.  Redis queue inspection (LRANGE) to verify job flow
+  3.  MinIO bucket inspection to verify input/output files
+  4.  Port-forwarding for local debugging
+  5.  Logging system (Redis logging channel)
 - Testing approach:
-  (1) Unit testing REST endpoints
-  (2) Integration testing of full pipeline (upload → process → retrieve)
-  (3) Use of small sample inputs for fast iteration
-  (4) Load testing by sending multiple requests
+  1. Unit testing REST endpoints
+  2. Integration testing of full pipeline (upload → process → retrieve)
+  3. Use of small sample inputs for fast iteration
+  4. Load testing by sending multiple requests
 ## Use of Cloud Technologies
-
-  (1) Kubernetes (GKE) – orchestration and scaling
-  (2) Redis – distributed message queue
-  (3) MinIO / Object Storage – persistent storage
-  (4) Docker – containerization
-  (5) Ingress / Load Balancer – external access
+1. Kubernetes (GKE) – orchestration and scaling
+2. Redis – distributed message queue
+3. MinIO / Object Storage – persistent storage
+4. Docker – containerization
+5. Ingress / Load Balancer – external access
 
 ## Why This Project is Compelling
 - This project is interesting because it combines:
-  (1) AI-based image generation
-  (2) Scalable cloud architecture
+  1. AI-based image generation
+  2. Scalable cloud architecture
 - Unlike a simple lab extension, this project demonstrates how machine learning systems can be deployed in a production-style environment.
 - Additionally, the idea of transforming simple sketches into fully rendered images provides a creative and engaging user experience.
 
 ## Scope and Ambition
 - This project is ambitious but still within scope.
-  (1) It refer to the Lab 7 architecture (REST + Redis + Worker + Storage)
-  (2) The extension is replacing audio processing with image generation
-  (3) The system remains modular and manageable
+  1. It refer to the Lab 7 architecture (REST + Redis + Worker + Storage)
+  2. The extension is replacing audio processing with image generation
+  3. The system remains modular and manageable
 - Potential risks:
-  (1) Model complexity (we will start with a simple model or API if needed)
-  (2) Resource usage (we will use small models or limited scaling initially)
+  1. Model complexity (we will start with a simple model or API if needed)
+  2. Resource usage (we will use small models or limited scaling initially)
 - Overall, the project is achievable within the course timeline.
 
 
