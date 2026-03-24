@@ -1,5 +1,5 @@
 # SketchGallery
-A Scalable Sketch-to-Image Generation Service
+Asynchronous Scalable Sketch-to-Image Generation Service
 
 ## Title and Participants
 - Title: Sketch-to-Gallery(A Scalable Sketch-to-Image Generation Service)
@@ -12,6 +12,26 @@ A Scalable Sketch-to-Image Generation Service
 - By lowering the barrier from imagination to creation, the project enables anyone to turn simple visual ideas into a growing personal collection of artwork. Ultimately, this project demonstrates how cloud-based service architecture can power scalable and modular AI-driven creative experiences.
 
 ## Development Components
+
+- Software Components
+	1.	Ingress / Load Balancer : Routes external traffic to the REST API
+	2.	REST API (Flask) : Handles user requests, uploads sketches, checks job status, and serves gallery metadata
+	3.	Authentication Service : Manages user identity and access control
+	4.	Metadata Database (Cloud SQL / Firestore) : Stores users, job status, gallery metadata, and model version info
+	5.	Redis Streams : Message queue for asynchronous task processing and retry handling
+	6.	Worker Service : Processes sketches using a generative model and writes results back to storage
+	7.	MinIO (Object Storage) : Stores input sketches, intermediate assets, and generated images
+	8.	Gallery Service / Retrieval Layer : Allows users to browse, retrieve, and manage their generated artworks
+	9.	Monitoring & Logging Stack : Collects logs, metrics, and health signals for reliability
+	10.	CI/CD Pipeline : Builds, stores, and deploys containerized services
+
+- Hardware / Cloud Infrastructure
+	1.	Google Cloud Platform (GCP)
+	2.	Google Kubernetes Engine (GKE)
+	3.	Compute Engine Node Pools for API and worker workloads
+	4.	GPU Node Pool for generative model inference
+	5.	Artifact Registry for container images
+	6.	Secret Manager for credentials and API keys
 
 
 ## Architecture Diagram
