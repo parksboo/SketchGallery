@@ -50,15 +50,13 @@ Asynchronous Scalable Sketch-to-Image Generation Service
 
 - We will use multiple debugging strategies:
   1. kubectl logs to inspect logs from REST and Worker pods
-  2.  Redis queue inspection (LRANGE) to verify job flow
-  3.  MinIO bucket inspection to verify input/output files
-  4.  Port-forwarding for local debugging
-  5.  Logging system (Redis logging channel)
+  2.  MinIO bucket inspection to verify input/output files
+  3.  Port-forwarding for local debugging
 - Testing approach:
   1. Unit testing REST endpoints
   2. Integration testing of full pipeline (upload → process → retrieve)
   3. Use of small sample inputs for fast iteration
-  4. Load testing by sending multiple requests
+
 ## Use of Cloud Technologies
 1. Kubernetes (GKE) – orchestration and scaling
 2. Redis – distributed message queue
