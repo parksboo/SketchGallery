@@ -31,7 +31,8 @@ Asynchronous Scalable Sketch-to-Image Generation Service
 
 
 ## Architecture Diagram
-<img width="510" height="395" alt="image" src="https://github.com/user-attachments/assets/faa72b62-3415-4901-b2e6-f08c93be241e" />
+![Architecture Diagram](images/architecture.drawio.png)
+
 
 ## Interaction Between Components
 
