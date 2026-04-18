@@ -1,0 +1,5 @@
+# Runtime dependencies for control plane (webserver), data plane, and GCS signed URL support.
+Flask>=3.0,<4.0
+gunicorn>=22.0,<23.0
+psycopg[binary]>=3.2,<4.0
+google-cloud-storage>=2.18,<3.0
