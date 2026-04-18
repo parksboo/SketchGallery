@@ -1,0 +1,8 @@
+[
+  {
+    "origin": ["http://127.0.0.1:5050"],
+    "method": ["GET", "PUT", "HEAD", "OPTIONS"],
+    "responseHeader": ["Content-Type", "x-goog-resumable"],
+    "maxAgeSeconds": 3600
+  }
+]
