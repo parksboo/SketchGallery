@@ -1,0 +1,49 @@
+{% extends 'base.html' %}
+{% block title %}SketchGallery | Studio{% endblock %}
+{% block content %}
+<section class="hero">
+  <p class="eyebrow">Sketch-to-Gallery Studio</p>
+  <h1>A workflow that turns rough sketches into gallery-ready artwork</h1>
+  <p class="sub">This is currently a frontend-only Flask implementation before backend integration. The page flow and UX are already aligned with the target product structure.</p>
+  <div class="hero-actions">
+    <a class="btn primary" href="{{ url_for('ui.create') }}">Create New Job</a>
+    <a class="btn ghost" href="{{ url_for('ui.gallery') }}">View Gallery</a>
+  </div>
+</section>
+
+<section class="stats-grid">
+  <article>
+    <h3>Total Jobs</h3>
+    <p>{{ stats.total }}</p>
+  </article>
+  <article>
+    <h3>Completed</h3>
+    <p>{{ stats.completed }}</p>
+  </article>
+  <article>
+    <h3>Processing</h3>
+    <p>{{ stats.processing }}</p>
+  </article>
+</section>
+
+<section class="panel">
+  <div class="panel-head">
+    <h2>Recent Jobs</h2>
+    <a href="{{ url_for('ui.create') }}">+ New</a>
+  </div>
+  <div class="job-list">
+    {% for job in jobs %}
+      <a class="job-row" href="{{ url_for('ui.job_detail', job_id=job.id) }}">
+        <div>
+          <strong>{{ job.title }}</strong>
+          <p>{{ job.prompt }}</p>
+        </div>
+        <div class="job-meta">
+          <span class="badge {{ job.status }}">{{ job.status }}</span>
+          <small>{{ job.created_at|human_time }}</small>
+        </div>
+      </a>
+    {% endfor %}
+  </div>
+</section>
+{% endblock %}

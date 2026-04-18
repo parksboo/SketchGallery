@@ -1,0 +1,94 @@
+{% extends 'base.html' %}
+{% block title %}SketchGallery | Gallery{% endblock %}
+{% block content %}
+<section class="panel wide">
+  <div class="panel-head">
+    <h1>Generated Gallery</h1>
+    <div class="mode-switch">
+      <a class="{% if mode == 'grid' %}active{% endif %}" href="{{ url_for('ui.gallery', mode='grid') }}">Grid View</a>
+      <a class="{% if mode == 'museum' %}active{% endif %}" href="{{ url_for('ui.gallery', mode='museum') }}">Museum View</a>
+      <a href="{{ url_for('ui.create') }}">+ New Job</a>
+    </div>
+  </div>
+
+  {% if items %}
+    {% if mode == 'museum' and featured %}
+      <div class="museum-stage">
+        <div class="museum-nav-wrap">
+          <a
+            class="museum-nav prev"
+            href="{{ url_for('ui.gallery', mode='museum', job_id=prev_item.id) }}"
+            aria-label="Previous artwork"
+            title="Previous"
+          >
+            &#10094;
+          </a>
+        <figure class="museum-frame">
+          <img
+            class="museum-generated"
+            src="{{ featured.generated_url }}"
+            alt="Generated result for {{ featured.title }}"
+          >
+          <div class="museum-sketch">
+            <small>Original Sketch</small>
+            <img
+              src="{{ featured.sketch_url }}"
+              alt="Original sketch for {{ featured.title }}"
+            >
+          </div>
+        </figure>
+          <a
+            class="museum-nav next"
+            href="{{ url_for('ui.gallery', mode='museum', job_id=next_item.id) }}"
+            aria-label="Next artwork"
+            title="Next"
+          >
+            &#10095;
+          </a>
+        </div>
+        <h2 class="museum-title">{{ featured.title }}</h2>
+      </div>
+
+      <div class="museum-rail">
+        {% for item in items %}
+          <a
+            class="museum-thumb {% if item.id == featured.id %}active{% endif %}"
+            href="{{ url_for('ui.gallery', mode='museum', job_id=item.id) }}"
+            title="{{ item.title }}"
+          >
+            <img src="{{ item.generated_url }}" alt="{{ item.title }}">
+            <span>{{ item.title }}</span>
+          </a>
+        {% endfor %}
+      </div>
+    {% else %}
+      <div class="gallery-grid">
+        {% for item in items %}
+          <article class="art-card">
+            <div class="image-pair">
+              <div class="image-slot">
+                <span>Sketch</span>
+                <img src="{{ item.sketch_url }}" alt="Sketch input for {{ item.title }}">
+              </div>
+              <div class="image-slot">
+                <span>Generated</span>
+                <img src="{{ item.generated_url }}" alt="Generated result for {{ item.title }}">
+              </div>
+            </div>
+            <div class="art-body">
+              <h3>{{ item.title }}</h3>
+              <p>{{ item.prompt }}</p>
+              <div class="art-meta">
+                <span>{{ item.style }}</span>
+                <a href="{{ url_for('ui.job_detail', job_id=item.id) }}">Details</a>
+              </div>
+            </div>
+          </article>
+        {% endfor %}
+      </div>
+    {% endif %}
+  {% else %}
+    <p class="sub">No completed jobs yet. Create your first one.</p>
+  {% endif %}
+</section>
+{% endblock %}

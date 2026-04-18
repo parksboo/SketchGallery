@@ -1,0 +1,43 @@
+{% extends 'base.html' %}
+{% block title %}SketchGallery | Create{% endblock %}
+{% block content %}
+<section class="panel wide">
+  <h1>Create a New Artwork</h1>
+  <p class="sub">Upload goes directly to the dataplane service. This webserver only submits metadata and job orchestration data.</p>
+  {% if form_error %}
+    <p class="form-error">{{ form_error }}</p>
+  {% endif %}
+  <form method="post" class="form-grid" id="create-form" data-upload-url="{{ dataplane_upload_url }}">
+    <input type="hidden" name="job_id" id="job_id">
+    <input type="hidden" name="sketch_key" id="sketch_key">
+    <input type="hidden" name="sketch_name" id="sketch_name">
+    <label>
+      Title
+      <input type="text" name="title" placeholder="e.g. Moonlit Harbor" required>
+    </label>
+
+    <label>
+      Style
+      <select name="style">
+        <option>Cinematic</option>
+        <option>Fantasy Matte</option>
+        <option>Illustration</option>
+        <option>Retro Poster</option>
+      </select>
+    </label>
+
+    <label class="span-2">
+      Prompt
+      <textarea name="prompt" rows="4" placeholder="Describe scene, mood, lighting, and color direction" required></textarea>
+    </label>
+
+    <label class="span-2">
+      Sketch File (PNG only)
+      <input type="file" name="sketch_file" id="sketch_file" accept=".png,image/png" required>
+    </label>
+
+    <button class="btn primary" type="submit" id="create-submit">Start Job</button>
+    <p class="sub span-2" id="create-status"></p>
+  </form>
+</section>
+{% endblock %}

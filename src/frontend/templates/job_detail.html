@@ -1,0 +1,44 @@
+{% extends 'base.html' %}
+{% block title %}SketchGallery | Job {{ job.id[:8] }}{% endblock %}
+{% block content %}
+<section class="panel wide">
+  <div class="panel-head">
+    <h1>{{ job.title }}</h1>
+    <span class="badge {{ job.status }}">{{ job.status }}</span>
+  </div>
+
+  <p class="sub">{{ job.prompt }}</p>
+
+  <div class="image-pair detail-pair">
+    <div class="image-slot">
+      <span>Sketch</span>
+      <img src="{{ job.sketch_url }}" alt="Sketch input for {{ job.title }}">
+    </div>
+    <div class="image-slot">
+      <span>Generated</span>
+      <img src="{{ job.generated_url }}" alt="Generated result for {{ job.title }}">
+    </div>
+  </div>
+
+  <div class="progress-wrap">
+    <div class="progress-bar" style="--progress: {{ job.progress }}%"></div>
+    <p>{{ job.progress }}% complete</p>
+  </div>
+
+  <dl class="meta-grid">
+    <div>
+      <dt>Style</dt>
+      <dd>{{ job.style }}</dd>
+    </div>
+    <div>
+      <dt>Sketch</dt>
+      <dd>{{ job.sketch_name }}</dd>
+    </div>
+  </dl>
+
+  <div class="hero-actions">
+    <a class="btn ghost" href="{{ url_for('ui.home') }}">Dashboard</a>
+    <a class="btn primary" href="{{ url_for('ui.gallery') }}">Gallery</a>
+  </div>
+</section>
+{% endblock %}
