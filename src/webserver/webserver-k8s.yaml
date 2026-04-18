@@ -58,10 +58,18 @@ spec:
                 secretKeyRef:
                   name: postgres-secret
                   key: POSTGRES_PASSWORD
-            - name: DATAPLANE_INTERNAL_URL
-              value: http://sketchgallery-dataplane:8080
-            - name: DATAPLANE_PUBLIC_URL
-              value: http://REPLACE_WITH_BROWSER_REACHABLE_DATAPLANE
+            - name: GCS_BUCKET
+              value: REPLACE_WITH_GCS_BUCKET
+            - name: GCS_UPLOAD_URL_EXPIRE_SEC
+              value: "600"
+            - name: GCS_DOWNLOAD_URL_EXPIRE_SEC
+              value: "600"
+            - name: GOOGLE_APPLICATION_CREDENTIALS
+              value: /var/secrets/google/key.json
+          volumeMounts:
+            - name: gcp-sa-key
+              mountPath: /var/secrets/google
+              readOnly: true
           readinessProbe:
             httpGet:
               path: /health
@@ -74,3 +82,8 @@ spec:
               port: 5050
             initialDelaySeconds: 15
             periodSeconds: 10
+      volumes:
+        - name: gcp-sa-key
+          secret:
+            secretName: gcp-sa-key
+            optional: true

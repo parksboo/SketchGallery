@@ -18,17 +18,17 @@ class Settings:
     pg_db: str = os.getenv("PGDATABASE", "sketchgallery")
     pg_user: str = os.getenv("PGUSER", "sketchgallery")
     pg_password: str = os.getenv("PGPASSWORD", "sketchgallery")
-    dataplane_internal_url: str = os.getenv("DATAPLANE_INTERNAL_URL", "http://sketchgallery-dataplane:8080")
-    dataplane_public_url: str = os.getenv("DATAPLANE_PUBLIC_URL", "http://127.0.0.1:8080")
+
+    gcs_bucket: str = os.getenv("GCS_BUCKET", "")
+    gcs_upload_url_expire_sec: int = int(os.getenv("GCS_UPLOAD_URL_EXPIRE_SEC", "600"))
+    gcs_download_url_expire_sec: int = int(os.getenv("GCS_DOWNLOAD_URL_EXPIRE_SEC", "600"))
 
     @property
     def templates_dir(self) -> Path:
-        # Reuse existing frontend templates.
         return self.project_root / "src" / "frontend" / "templates"
 
     @property
     def static_dir(self) -> Path:
-        # Reuse existing frontend static files.
         return self.project_root / "src" / "frontend" / "static"
 
 

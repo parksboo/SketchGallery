@@ -3,12 +3,14 @@ from __future__ import annotations
 from datetime import datetime
 from typing import Any, Dict, List, Optional, Tuple
 
-from webserver.services.storage import file_url
+from webserver.services.storage import StorageError, issue_download_url
 
 
 def to_ui_job(row: Dict[str, Any]) -> Dict[str, Any]:
     sketch_key = row.get("sketch_path") or ""
     generated_key = row.get("result_path") or ""
+    sketch_url = _safe_signed_url(sketch_key)
+    generated_url = _safe_signed_url(generated_key)
     return {
         "id": str(row["id"]),
         "title": row.get("title") or "Untitled Concept",
@@ -17,8 +19,8 @@ def to_ui_job(row: Dict[str, Any]) -> Dict[str, Any]:
         "sketch_name": row.get("sketch_name") or "upload.png",
         "sketch_key": sketch_key,
         "generated_key": generated_key,
-        "sketch_url": file_url(sketch_key) if sketch_key else "",
-        "generated_url": file_url(generated_key) if generated_key else "",
+        "sketch_url": sketch_url,
+        "generated_url": generated_url,
         "status": row.get("status") or "queued",
         "created_at": row.get("created_at"),
         "updated_at": row.get("updated_at"),
@@ -39,9 +41,9 @@ def to_api_job(row: Dict[str, Any]) -> Dict[str, Any]:
     if row.get("error"):
         payload["error"] = row["error"]
     if row.get("sketch_path"):
-        payload["sketch_url"] = file_url(row["sketch_path"])
+        payload["sketch_url"] = _safe_signed_url(row["sketch_path"])
     if row.get("result_path"):
-        payload["result_url"] = file_url(row["result_path"])
+        payload["result_url"] = _safe_signed_url(row["result_path"])
     return payload
 
 
@@ -69,3 +71,12 @@ def _to_iso(value: Any) -> str | None:
     if isinstance(value, datetime):
         return value.isoformat()
     return str(value)
+
+
+def _safe_signed_url(object_key: str) -> str:
+    if not object_key:
+        return ""
+    try:
+        return issue_download_url(object_key)
+    except StorageError:
+        return ""

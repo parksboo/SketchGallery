@@ -45,16 +45,45 @@
   }
 
   const fileInput = document.getElementById('sketch_file');
-  const jobIdInput = document.getElementById('job_id');
   const sketchKeyInput = document.getElementById('sketch_key');
   const sketchNameInput = document.getElementById('sketch_name');
   const submitBtn = document.getElementById('create-submit');
   const statusEl = document.getElementById('create-status');
-  const uploadUrl = createForm.dataset.uploadUrl;
+  const signUrl = createForm.dataset.signUrl;
 
   function setStatus(msg, isError) {
     statusEl.textContent = msg || '';
     statusEl.style.color = isError ? '#991b1b' : '#374151';
+  }
+
+  async function requestSignedUpload(file) {
+    const response = await fetch(signUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        filename: file.name,
+        content_type: file.type || 'image/png',
+        purpose: 'sketches'
+      })
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to get signed URL: ' + (await response.text()));
+    }
+
+    return response.json();
+  }
+
+  async function uploadToGcs(uploadUrl, file) {
+    const response = await fetch(uploadUrl, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'image/png' },
+      body: file
+    });
+
+    if (!response.ok) {
+      throw new Error('GCS upload failed: ' + (await response.text()));
+    }
   }
 
   createForm.addEventListener('submit', async function (event) {
@@ -71,37 +100,26 @@
       return;
     }
 
-    if (!uploadUrl) {
-      setStatus('Dataplane upload URL is missing.', true);
+    if (!signUrl) {
+      setStatus('Signed upload endpoint is missing.', true);
       return;
     }
 
     try {
       submitBtn.disabled = true;
-      setStatus('Uploading sketch to dataplane...', false);
+      setStatus('Requesting signed URL...', false);
 
-      const fd = new FormData();
-      fd.append('file', file);
+      const signed = await requestSignedUpload(file);
+      setStatus('Uploading PNG directly to GCS...', false);
+      await uploadToGcs(signed.upload_url, file);
 
-      const uploadResp = await fetch(uploadUrl, {
-        method: 'POST',
-        body: fd
-      });
-
-      if (!uploadResp.ok) {
-        const text = await uploadResp.text();
-        throw new Error('Upload failed: ' + text);
-      }
-
-      const payload = await uploadResp.json();
-      sketchKeyInput.value = payload.key;
+      sketchKeyInput.value = signed.object_key;
       sketchNameInput.value = file.name;
-      jobIdInput.value = (window.crypto && crypto.randomUUID) ? crypto.randomUUID() : String(Date.now());
 
       setStatus('Upload complete. Creating job...', false);
       createForm.submit();
     } catch (err) {
-      setStatus(err.message || 'Failed to upload file.', true);
+      setStatus(err.message || 'Upload failed.', true);
       submitBtn.disabled = false;
     }
   });

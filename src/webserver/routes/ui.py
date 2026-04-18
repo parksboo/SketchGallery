@@ -1,11 +1,12 @@
 from __future__ import annotations
 
+import uuid
 from datetime import datetime
 
 from flask import Blueprint, current_app, redirect, render_template, request, url_for
 
 from webserver.services.jobs import select_featured, to_ui_job
-from webserver.services.storage import DataPlaneError, copy_file, upload_endpoint
+from webserver.services.storage import StorageError, copy_object
 
 ui_bp = Blueprint("ui", __name__)
 
@@ -39,17 +40,16 @@ def create() -> str:
         sketch_name = request.form.get("sketch_name", "upload.png").strip() or "upload.png"
 
         if not sketch_key:
-            form_error = "Upload sketch to dataplane first."
+            form_error = "Upload sketch to GCS first."
         else:
-            job_id = request.form.get("job_id", "").strip()
-            if not job_id:
-                form_error = "job_id is required."
-                return render_template("create.html", form_error=form_error, dataplane_upload_url=upload_endpoint())
+            job_id = str(uuid.uuid4())
+            result_key = f"results/{job_id}.png"
+
             try:
-                generated = copy_file(sketch_key)
-            except DataPlaneError as exc:
+                generated = copy_object(sketch_key, result_key)
+            except StorageError as exc:
                 form_error = str(exc)
-                return render_template("create.html", form_error=form_error, dataplane_upload_url=upload_endpoint())
+                return render_template("create.html", form_error=form_error)
 
             _repo().create_job(
                 job_id=job_id,
@@ -63,7 +63,7 @@ def create() -> str:
             )
             return redirect(url_for("ui.job_detail", job_id=job_id))
 
-    return render_template("create.html", form_error=form_error, dataplane_upload_url=upload_endpoint())
+    return render_template("create.html", form_error=form_error)
 
 
 @ui_bp.get("/jobs/<job_id>")
@@ -94,4 +94,3 @@ def gallery() -> str:
         prev_item=prev_item,
         next_item=next_item,
     )
-

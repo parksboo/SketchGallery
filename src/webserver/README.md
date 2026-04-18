@@ -2,23 +2,30 @@
 
 This webserver is a single Flask app that serves:
 - UI routes: `/`, `/create`, `/gallery`, `/jobs/<id>`
-- API routes: `/api/v1/jobs`, `/api/v1/jobs/<id>`, `/api/v1/gallery`
-  - `POST /api/v1/jobs` expects JSON metadata (`sketch_key`, `title`, `prompt`, `style`)
-  - `GET /api/v1/uploads/config` returns dataplane upload endpoint
+- API routes:
+  - `POST /api/v1/uploads/sign` (issue GCS signed upload URL)
+  - `POST /api/v1/jobs` (expects JSON metadata: `sketch_key`, `title`, `prompt`, `style`)
+  - `GET /api/v1/jobs/<id>`
+  - `GET /api/v1/jobs/<id>/result`
+  - `GET /api/v1/gallery`
 
-It uses PostgreSQL for metadata and delegates file transfer to the dataplane service.
+It uses PostgreSQL for metadata and Google Cloud Storage for image objects.
 
 ## Local run
 ```bash
 cd SketchGallery
 pip install -r requirements.txt
+
 export PGHOST=127.0.0.1
 export PGPORT=5432
 export PGDATABASE=sketchgallery
 export PGUSER=sketchgallery
 export PGPASSWORD=sketchgallery
-export DATAPLANE_INTERNAL_URL=http://127.0.0.1:8080
-export DATAPLANE_PUBLIC_URL=http://127.0.0.1:8080
+
+export GCS_BUCKET=your-bucket
+export GCS_UPLOAD_URL_EXPIRE_SEC=600
+export GCS_DOWNLOAD_URL_EXPIRE_SEC=600
+
 python3 src/webserver/app.py
 ```
 
@@ -30,9 +37,11 @@ docker build -f src/webserver/Dockerfile -t sketchgallery-web:latest .
 
 ## Deploy to Kubernetes
 ```bash
-kubectl apply -f src/webserver/webserver-k8s.yaml
-kubectl get deploy,svc,pods -l app=sketchgallery-web
+GCS_BUCKET=your-bucket ./scripts/k8s-stack.sh up
+./scripts/k8s-stack.sh status
 ```
 
-Note: deploy dataplane first (`src/dataplane/dataplane-k8s.yaml`).
-`DATAPLANE_PUBLIC_URL` must be reachable by end-user browsers (typically an ingress URL).
+## GCS IAM / CORS notes
+- The webserver identity must be able to sign URLs (`iam.serviceAccounts.signBlob` via Service Account Token Creator or equivalent).
+- The same identity must have object access for copy/read/write in the target bucket.
+- Bucket CORS must allow browser `PUT` for direct upload.

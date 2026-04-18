@@ -3,11 +3,10 @@ set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 NAMESPACE="${NAMESPACE:-default}"
-DATAPLANE_PUBLIC_URL="${DATAPLANE_PUBLIC_URL:-http://127.0.0.1:8080}"
+GCS_BUCKET="${GCS_BUCKET:-}"
 
 POSTGRES_SECRET_FILE="$ROOT_DIR/src/postgres/postgres-secret.example.yaml"
 POSTGRES_FILE="$ROOT_DIR/src/postgres/postgres-k8s.yaml"
-DATAPLANE_FILE="$ROOT_DIR/src/dataplane/dataplane-k8s.yaml"
 WEBSERVER_FILE="$ROOT_DIR/src/webserver/webserver-k8s.yaml"
 
 usage() {
@@ -15,18 +14,17 @@ usage() {
 Usage: $(basename "$0") <command>
 
 Commands:
-  up            Deploy postgres + dataplane + webserver
-  down          Remove webserver + dataplane + postgres
+  up            Deploy postgres + webserver
+  down          Remove webserver + postgres
   status        Show current deploy/svc/pod status
   logs-web      Tail webserver logs
-  logs-data     Tail dataplane logs
 
 Environment variables:
-  NAMESPACE             Kubernetes namespace (default: default)
-  DATAPLANE_PUBLIC_URL Browser-reachable dataplane URL (default: http://127.0.0.1:8080)
+  NAMESPACE     Kubernetes namespace (default: default)
+  GCS_BUCKET    GCS bucket name for signed URL issue (required for up)
 
 Examples:
-  DATAPLANE_PUBLIC_URL=http://127.0.0.1:8080 ./scripts/k8s-stack.sh up
+  GCS_BUCKET=my-sketch-bucket ./scripts/k8s-stack.sh up
   ./scripts/k8s-stack.sh status
   ./scripts/k8s-stack.sh down
 EOF
@@ -39,10 +37,15 @@ require_cmd() {
   }
 }
 
-apply_web_with_dataplane_url() {
+apply_web_with_bucket() {
+  if [[ -z "$GCS_BUCKET" ]]; then
+    echo "[ERROR] GCS_BUCKET is required for up" >&2
+    exit 1
+  fi
+
   local tmp
   tmp="$(mktemp)"
-  sed "s|http://REPLACE_WITH_BROWSER_REACHABLE_DATAPLANE|${DATAPLANE_PUBLIC_URL}|g" "$WEBSERVER_FILE" > "$tmp"
+  sed "s|REPLACE_WITH_GCS_BUCKET|${GCS_BUCKET}|g" "$WEBSERVER_FILE" > "$tmp"
   kubectl -n "$NAMESPACE" apply -f "$tmp"
   rm -f "$tmp"
 }
@@ -52,7 +55,7 @@ deploy_all() {
   require_cmd sed
 
   echo "[INFO] Namespace: $NAMESPACE"
-  echo "[INFO] DATAPLANE_PUBLIC_URL: $DATAPLANE_PUBLIC_URL"
+  echo "[INFO] GCS_BUCKET: $GCS_BUCKET"
 
   if ! kubectl -n "$NAMESPACE" get secret postgres-secret >/dev/null 2>&1; then
     echo "[INFO] postgres-secret not found. Applying example secret: $POSTGRES_SECRET_FILE"
@@ -65,11 +68,8 @@ deploy_all() {
   echo "[INFO] Applying Postgres resources..."
   kubectl -n "$NAMESPACE" apply -f "$POSTGRES_FILE"
 
-  echo "[INFO] Applying Dataplane resources..."
-  kubectl -n "$NAMESPACE" apply -f "$DATAPLANE_FILE"
-
   echo "[INFO] Applying Webserver resources..."
-  apply_web_with_dataplane_url
+  apply_web_with_bucket
 
   echo "[INFO] Done. Current status:"
   show_status
@@ -81,9 +81,6 @@ remove_all() {
   echo "[INFO] Removing Webserver resources..."
   kubectl -n "$NAMESPACE" delete -f "$WEBSERVER_FILE" --ignore-not-found
 
-  echo "[INFO] Removing Dataplane resources..."
-  kubectl -n "$NAMESPACE" delete -f "$DATAPLANE_FILE" --ignore-not-found
-
   echo "[INFO] Removing Postgres resources..."
   kubectl -n "$NAMESPACE" delete -f "$POSTGRES_FILE" --ignore-not-found
 
@@ -93,15 +90,11 @@ remove_all() {
 
 show_status() {
   kubectl -n "$NAMESPACE" get deploy,svc,pods \
-    -l 'app in (postgres,sketchgallery-dataplane,sketchgallery-web)'
+    -l 'app in (postgres,sketchgallery-web)'
 }
 
 logs_web() {
   kubectl -n "$NAMESPACE" logs deploy/sketchgallery-web -f --tail=200
-}
-
-logs_data() {
-  kubectl -n "$NAMESPACE" logs deploy/sketchgallery-dataplane -f --tail=200
 }
 
 main() {
@@ -118,9 +111,6 @@ main() {
       ;;
     logs-web)
       logs_web
-      ;;
-    logs-data)
-      logs_data
       ;;
     *)
       usage

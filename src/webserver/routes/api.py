@@ -5,7 +5,7 @@ import uuid
 from flask import Blueprint, current_app, jsonify, request
 
 from webserver.services.jobs import to_api_job
-from webserver.services.storage import DataPlaneError, copy_file, upload_endpoint
+from webserver.services.storage import StorageError, copy_object, issue_upload_url
 
 api_bp = Blueprint("api", __name__, url_prefix="/api/v1")
 
@@ -19,6 +19,23 @@ def health() -> tuple:
     return jsonify({"status": "ok"}), 200
 
 
+@api_bp.post("/uploads/sign")
+def sign_upload() -> tuple:
+    payload = request.get_json(silent=True) or {}
+    filename = str(payload.get("filename", "")).strip()
+    purpose = str(payload.get("purpose", "sketches")).strip() or "sketches"
+
+    if not filename:
+        return jsonify({"error": "filename is required"}), 400
+
+    try:
+        signed = issue_upload_url(filename=filename, purpose=purpose)
+    except StorageError as exc:
+        return jsonify({"error": str(exc)}), 400
+
+    return jsonify(signed), 200
+
+
 @api_bp.post("/jobs")
 def create_job() -> tuple:
     payload = request.get_json(silent=True) or {}
@@ -26,14 +43,16 @@ def create_job() -> tuple:
     if not sketch_key:
         return jsonify({"error": "sketch_key is required"}), 400
 
-    job_id = str(payload.get("job_id", "")).strip() or str(uuid.uuid4())
+    job_id = str(uuid.uuid4())
     title = str(payload.get("title", "Untitled Concept")).strip() or "Untitled Concept"
     prompt = str(payload.get("prompt", "No prompt yet")).strip() or "No prompt yet"
     style = str(payload.get("style", "Cinematic")).strip() or "Cinematic"
     sketch_name = str(payload.get("sketch_name", "upload.png")).strip() or "upload.png"
+
+    result_key = f"results/{job_id}.png"
     try:
-        generated = copy_file(sketch_key)
-    except DataPlaneError as exc:
+        generated = copy_object(sketch_key, result_key)
+    except StorageError as exc:
         return jsonify({"error": str(exc)}), 502
 
     _repo().create_job(
@@ -75,8 +94,3 @@ def get_gallery() -> tuple:
 
     rows = _repo().list_completed_jobs(limit=limit)
     return jsonify({"items": [to_api_job(row) for row in rows]}), 200
-
-
-@api_bp.get("/uploads/config")
-def upload_config() -> tuple:
-    return jsonify({"upload_url": upload_endpoint()}), 200
