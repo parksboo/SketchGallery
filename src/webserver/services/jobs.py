@@ -1,0 +1,71 @@
+from __future__ import annotations
+
+from datetime import datetime
+from typing import Any, Dict, List, Optional, Tuple
+
+from webserver.services.storage import file_url
+
+
+def to_ui_job(row: Dict[str, Any]) -> Dict[str, Any]:
+    sketch_key = row.get("sketch_path") or ""
+    generated_key = row.get("result_path") or ""
+    return {
+        "id": str(row["id"]),
+        "title": row.get("title") or "Untitled Concept",
+        "prompt": row.get("prompt") or "",
+        "style": row.get("style") or "Cinematic",
+        "sketch_name": row.get("sketch_name") or "upload.png",
+        "sketch_key": sketch_key,
+        "generated_key": generated_key,
+        "sketch_url": file_url(sketch_key) if sketch_key else "",
+        "generated_url": file_url(generated_key) if generated_key else "",
+        "status": row.get("status") or "queued",
+        "created_at": row.get("created_at"),
+        "updated_at": row.get("updated_at"),
+        "progress": 100 if (row.get("status") == "completed") else 0,
+    }
+
+
+def to_api_job(row: Dict[str, Any]) -> Dict[str, Any]:
+    payload = {
+        "job_id": str(row["id"]),
+        "title": row.get("title"),
+        "prompt": row.get("prompt"),
+        "style": row.get("style"),
+        "status": row.get("status"),
+        "created_at": _to_iso(row.get("created_at")),
+        "updated_at": _to_iso(row.get("updated_at")),
+    }
+    if row.get("error"):
+        payload["error"] = row["error"]
+    if row.get("sketch_path"):
+        payload["sketch_url"] = file_url(row["sketch_path"])
+    if row.get("result_path"):
+        payload["result_url"] = file_url(row["result_path"])
+    return payload
+
+
+def select_featured(
+    items: List[Dict[str, Any]], selected_job_id: str
+) -> Tuple[Optional[Dict[str, Any]], Optional[Dict[str, Any]], Optional[Dict[str, Any]]]:
+    if not items:
+        return None, None, None
+
+    featured_index = 0
+    for idx, item in enumerate(items):
+        if item["id"] == selected_job_id:
+            featured_index = idx
+            break
+
+    featured = items[featured_index]
+    prev_item = items[(featured_index - 1) % len(items)]
+    next_item = items[(featured_index + 1) % len(items)]
+    return featured, prev_item, next_item
+
+
+def _to_iso(value: Any) -> str | None:
+    if value is None:
+        return None
+    if isinstance(value, datetime):
+        return value.isoformat()
+    return str(value)
