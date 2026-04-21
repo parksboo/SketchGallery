@@ -21,6 +21,34 @@ body {
     linear-gradient(145deg, #fff8ea 0%, #f1efe8 55%, #ece9df 100%);
 }
 
+.toast {
+  position: fixed;
+  right: 18px;
+  bottom: 20px;
+  z-index: 80;
+  padding: 12px 14px;
+  border-radius: 10px;
+  color: #fff;
+  font-weight: 700;
+  box-shadow: 0 10px 22px rgba(0, 0, 0, 0.22);
+  opacity: 0;
+  transform: translateY(10px);
+  transition: opacity 220ms ease, transform 220ms ease;
+}
+
+.toast.success {
+  background: #166534;
+}
+
+.toast.error {
+  background: #b91c1c;
+}
+
+.toast.show {
+  opacity: 1;
+  transform: translateY(0);
+}
+
 .bg-orb {
   position: fixed;
   border-radius: 999px;
@@ -143,6 +171,11 @@ h2 {
   background: rgba(255, 255, 255, 0.6);
 }
 
+.btn.danger {
+  background: #b91c1c;
+  color: #fff;
+}
+
 .stats-grid {
   margin-top: 18px;
   display: grid;
@@ -261,6 +294,11 @@ h2 {
 .badge.completed {
   color: #14532d;
   background: #bbf7d0;
+}
+
+.badge.failed {
+  color: #991b1b;
+  background: #fee2e2;
 }
 
 .form-grid {
@@ -398,6 +436,26 @@ h2 {
   align-items: center;
 }
 
+.art-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.art-actions form {
+  margin: 0;
+}
+
+.link-danger {
+  background: transparent;
+  border: 0;
+  color: #b91c1c;
+  cursor: pointer;
+  font: inherit;
+  font-weight: 700;
+  padding: 0;
+}
+
 .art-meta a {
   color: var(--accent-2);
   text-decoration: none;
@@ -490,6 +548,14 @@ h2 {
   margin: 0;
   font-size: clamp(1.35rem, 2.5vw, 2rem);
   text-align: center;
+}
+
+.museum-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  flex-wrap: wrap;
 }
 
 .museum-rail {

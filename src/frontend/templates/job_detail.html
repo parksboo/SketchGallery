@@ -2,6 +2,9 @@
 {% block title %}SketchGallery | Job {{ job.id[:8] }}{% endblock %}
 {% block content %}
 <section class="panel wide">
+  {% if form_error %}
+    <p class="form-error">{{ form_error }}</p>
+  {% endif %}
   <div class="panel-head">
     <h1>{{ job.title }}</h1>
     <span class="badge {{ job.status }}">{{ job.status }}</span>
@@ -39,6 +42,10 @@
   <div class="hero-actions">
     <a class="btn ghost" href="{{ url_for('ui.home') }}">Dashboard</a>
     <a class="btn primary" href="{{ url_for('ui.gallery') }}">Gallery</a>
+    <form method="post" action="{{ url_for('ui.delete_job', job_id=job.id) }}" onsubmit="return confirm('Delete this artwork from gallery?');">
+      <input type="hidden" name="next" value="{{ url_for('ui.gallery') }}">
+      <button class="btn danger" type="submit">Delete</button>
+    </form>
   </div>
 </section>
 {% endblock %}

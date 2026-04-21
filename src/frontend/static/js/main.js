@@ -1,4 +1,38 @@
 (function () {
+  function showToast(message, level) {
+    if (!message) {
+      return;
+    }
+
+    const toast = document.createElement('div');
+    toast.className = 'toast ' + (level === 'error' ? 'error' : 'success');
+    toast.textContent = message;
+    document.body.appendChild(toast);
+
+    window.setTimeout(function () {
+      toast.classList.add('show');
+    }, 20);
+
+    window.setTimeout(function () {
+      toast.classList.remove('show');
+      window.setTimeout(function () {
+        toast.remove();
+      }, 220);
+    }, 2800);
+  }
+
+  const params = new URLSearchParams(window.location.search);
+  const toastMsg = params.get('toast');
+  const toastLevel = params.get('toast_level') || 'success';
+  if (toastMsg) {
+    showToast(toastMsg, toastLevel);
+    params.delete('toast');
+    params.delete('toast_level');
+    const cleanQuery = params.toString();
+    const cleanUrl = window.location.pathname + (cleanQuery ? ('?' + cleanQuery) : '') + window.location.hash;
+    window.history.replaceState({}, '', cleanUrl);
+  }
+
   const progress = document.querySelector('.progress-bar');
   if (progress) {
     const label = document.querySelector('.badge');

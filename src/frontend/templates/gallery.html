@@ -46,7 +46,13 @@
             &#10095;
           </a>
         </div>
-        <h2 class="museum-title">{{ featured.title }}</h2>
+        <div class="museum-title-row">
+          <h2 class="museum-title">{{ featured.title }}</h2>
+          <form method="post" action="{{ url_for('ui.delete_job', job_id=featured.id) }}" onsubmit="return confirm('Delete this artwork from gallery?');">
+            <input type="hidden" name="next" value="{{ url_for('ui.gallery', mode='museum') }}">
+            <button class="btn danger" type="submit">Delete</button>
+          </form>
+        </div>
       </div>
 
       <div class="museum-rail">
@@ -80,7 +86,13 @@
               <p>{{ item.prompt }}</p>
               <div class="art-meta">
                 <span>{{ item.style }}</span>
-                <a href="{{ url_for('ui.job_detail', job_id=item.id) }}">Details</a>
+                <div class="art-actions">
+                  <a href="{{ url_for('ui.job_detail', job_id=item.id) }}">Details</a>
+                  <form method="post" action="{{ url_for('ui.delete_job', job_id=item.id) }}" onsubmit="return confirm('Delete this artwork from gallery?');">
+                    <input type="hidden" name="next" value="{{ url_for('ui.gallery', mode='grid') }}">
+                    <button class="link-danger" type="submit">Delete</button>
+                  </form>
+                </div>
               </div>
             </div>
           </article>
