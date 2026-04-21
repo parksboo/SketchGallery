@@ -83,10 +83,53 @@ class PostgresRepository:
             )
             con.commit()
 
+    def mark_processing(self, job_id: str) -> None:
+        with self.conn() as con, con.cursor() as cur:
+            cur.execute(
+                """
+                UPDATE jobs
+                SET status = 'processing', error = NULL, updated_at = NOW()
+                WHERE id = %s
+                """,
+                (job_id,),
+            )
+            con.commit()
+
+    def mark_completed(self, job_id: str, result_path: str) -> None:
+        with self.conn() as con, con.cursor() as cur:
+            cur.execute(
+                """
+                UPDATE jobs
+                SET status = 'completed', result_path = %s, error = NULL, updated_at = NOW()
+                WHERE id = %s
+                """,
+                (result_path, job_id),
+            )
+            con.commit()
+
+    def mark_failed(self, job_id: str, error: str) -> None:
+        with self.conn() as con, con.cursor() as cur:
+            cur.execute(
+                """
+                UPDATE jobs
+                SET status = 'failed', error = %s, updated_at = NOW()
+                WHERE id = %s
+                """,
+                (error, job_id),
+            )
+            con.commit()
+
     def get_job(self, job_id: str) -> Optional[Dict[str, Any]]:
         with self.conn() as con, con.cursor() as cur:
             cur.execute("SELECT * FROM jobs WHERE id = %s", (job_id,))
             return cur.fetchone()
+
+    def delete_job(self, job_id: str) -> bool:
+        with self.conn() as con, con.cursor() as cur:
+            cur.execute("DELETE FROM jobs WHERE id = %s", (job_id,))
+            deleted = cur.rowcount > 0
+            con.commit()
+            return deleted
 
     def list_jobs(self, limit: int = 50) -> List[Dict[str, Any]]:
         with self.conn() as con, con.cursor() as cur:
