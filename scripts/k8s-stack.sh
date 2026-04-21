@@ -2,8 +2,20 @@
 set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+ENV_FILE="${ENV_FILE:-$ROOT_DIR/.env}"
+
+if [[ -f "$ENV_FILE" ]]; then
+  set -a
+  # shellcheck disable=SC1090
+  source "$ENV_FILE"
+  set +a
+fi
+
 NAMESPACE="${NAMESPACE:-default}"
 GCS_BUCKET="${GCS_BUCKET:-}"
+RAY_GENERATION_URL="${RAY_GENERATION_URL:-}"
+RAY_SHARED_TOKEN="${RAY_SHARED_TOKEN:-}"
+WEB_PUBLIC_BASE_URL="${WEB_PUBLIC_BASE_URL:-}"
 
 POSTGRES_SECRET_FILE="$ROOT_DIR/src/postgres/postgres-secret.example.yaml"
 POSTGRES_FILE="$ROOT_DIR/src/postgres/postgres-k8s.yaml"
@@ -20,11 +32,15 @@ Commands:
   logs-web      Tail webserver logs
 
 Environment variables:
+  ENV_FILE      Path to env file (default: <repo>/.env)
   NAMESPACE     Kubernetes namespace (default: default)
   GCS_BUCKET    GCS bucket name for signed URL issue (required for up)
+  RAY_GENERATION_URL  External Ray generation API endpoint (required for up)
+  RAY_SHARED_TOKEN    Shared bearer token for webserver<->ray auth (optional)
+  WEB_PUBLIC_BASE_URL Public web URL for Ray callback, e.g. https://app.example.com (optional)
 
 Examples:
-  GCS_BUCKET=my-sketch-bucket ./scripts/k8s-stack.sh up
+  GCS_BUCKET=my-sketch-bucket RAY_GENERATION_URL=https://ray.example.com/generate ./scripts/k8s-stack.sh up
   ./scripts/k8s-stack.sh status
   ./scripts/k8s-stack.sh down
 EOF
@@ -42,10 +58,19 @@ apply_web_with_bucket() {
     echo "[ERROR] GCS_BUCKET is required for up" >&2
     exit 1
   fi
+  if [[ -z "$RAY_GENERATION_URL" ]]; then
+    echo "[ERROR] RAY_GENERATION_URL is required for up (external Ray cluster endpoint)" >&2
+    exit 1
+  fi
 
   local tmp
   tmp="$(mktemp)"
-  sed "s|REPLACE_WITH_GCS_BUCKET|${GCS_BUCKET}|g" "$WEBSERVER_FILE" > "$tmp"
+  sed \
+    -e "s|REPLACE_WITH_GCS_BUCKET|${GCS_BUCKET}|g" \
+    -e "s|REPLACE_WITH_RAY_GENERATION_URL|${RAY_GENERATION_URL}|g" \
+    -e "s|REPLACE_WITH_RAY_SHARED_TOKEN|${RAY_SHARED_TOKEN}|g" \
+    -e "s|REPLACE_WITH_WEB_PUBLIC_BASE_URL|${WEB_PUBLIC_BASE_URL}|g" \
+    "$WEBSERVER_FILE" > "$tmp"
   kubectl -n "$NAMESPACE" apply -f "$tmp"
   rm -f "$tmp"
 }
@@ -56,6 +81,12 @@ deploy_all() {
 
   echo "[INFO] Namespace: $NAMESPACE"
   echo "[INFO] GCS_BUCKET: $GCS_BUCKET"
+  echo "[INFO] RAY_GENERATION_URL: $RAY_GENERATION_URL"
+  if [[ -n "$WEB_PUBLIC_BASE_URL" ]]; then
+    echo "[INFO] WEB_PUBLIC_BASE_URL: $WEB_PUBLIC_BASE_URL"
+  else
+    echo "[WARN] WEB_PUBLIC_BASE_URL is empty; Ray callback URL will not be included in dispatch payload."
+  fi
 
   if ! kubectl -n "$NAMESPACE" get secret postgres-secret >/dev/null 2>&1; then
     echo "[INFO] postgres-secret not found. Applying example secret: $POSTGRES_SECRET_FILE"
