@@ -3,3 +3,4 @@ Flask>=3.0,<4.0
 gunicorn>=22.0,<23.0
 psycopg[binary]>=3.2,<4.0
 google-cloud-storage>=2.18,<3.0
+ray[default]>=2.20,<3.0
