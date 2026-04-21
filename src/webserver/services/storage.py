@@ -5,6 +5,7 @@ from datetime import timedelta
 from functools import lru_cache
 from typing import Dict
 
+from google.api_core.exceptions import NotFound
 from google.auth.exceptions import DefaultCredentialsError
 from google.cloud import storage
 
@@ -76,16 +77,15 @@ def issue_download_url(object_key: str) -> str:
         raise StorageError(f"failed to issue signed download url: {exc}") from exc
 
 
-def copy_object(source_key: str, target_key: str) -> Dict[str, str]:
-    bucket = _bucket()
-    source_blob = bucket.blob(source_key)
+def delete_object(object_key: str, *, ignore_missing: bool = True) -> None:
+    if not object_key:
+        return
 
+    blob = _bucket().blob(object_key)
     try:
-        bucket.copy_blob(source_blob, bucket, target_key)
+        blob.delete()
+    except NotFound:
+        if not ignore_missing:
+            raise StorageError(f"object not found: {object_key}") from None
     except Exception as exc:  # noqa: BLE001
-        raise StorageError(f"failed to copy GCS object: {exc}") from exc
-
-    return {
-        "key": target_key,
-        "url": issue_download_url(target_key),
-    }
+        raise StorageError(f"failed to delete object '{object_key}': {exc}") from exc
