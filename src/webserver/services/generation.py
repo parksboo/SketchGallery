@@ -20,6 +20,7 @@ def dispatch_generation_job(
     title: str,
     prompt: str,
     style: str,
+    mode:str,
 ) -> Dict[str, Any]:
     endpoint = settings.ray_generation_url.strip()
     if not endpoint:
@@ -34,6 +35,7 @@ def dispatch_generation_job(
         "title": title,
         "prompt": prompt,
         "style": style,
+        "mode":mode,
     }
 
     public_base = settings.web_public_base_url.strip().rstrip("/")

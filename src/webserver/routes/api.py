@@ -4,8 +4,10 @@ import uuid
 
 from flask import Blueprint, current_app, jsonify, request
 
+from webserver.config import settings
+from webserver.services.generation import GenerationDispatchError, dispatch_generation_job
 from webserver.services.jobs import to_api_job
-from webserver.services.storage import StorageError, copy_object, issue_upload_url
+from webserver.services.storage import StorageError, delete_object, issue_upload_url
 
 api_bp = Blueprint("api", __name__, url_prefix="/api/v1")
 
@@ -48,12 +50,10 @@ def create_job() -> tuple:
     prompt = str(payload.get("prompt", "No prompt yet")).strip() or "No prompt yet"
     style = str(payload.get("style", "Cinematic")).strip() or "Cinematic"
     sketch_name = str(payload.get("sketch_name", "upload.png")).strip() or "upload.png"
+    default_mode = settings.default_generation_mode.strip() or "test"
+    mode = str(payload.get("mode", default_mode)).strip() or default_mode
 
     result_key = f"results/{job_id}.png"
-    try:
-        generated = copy_object(sketch_key, result_key)
-    except StorageError as exc:
-        return jsonify({"error": str(exc)}), 502
 
     _repo().create_job(
         job_id=job_id,
@@ -62,11 +62,26 @@ def create_job() -> tuple:
         style=style,
         sketch_name=sketch_name,
         sketch_path=sketch_key,
-        result_path=generated["key"],
-        status="completed",
+        result_path=result_key,
+        status="queued",
     )
 
-    return jsonify({"job_id": job_id, "status": "completed"}), 201
+    try:
+        dispatch_generation_job(
+            job_id=job_id,
+            sketch_key=sketch_key,
+            result_key=result_key,
+            title=title,
+            prompt=prompt,
+            style=style,
+            mode =mode,
+        )
+        _repo().mark_processing(job_id)
+    except GenerationDispatchError as exc:
+        _repo().mark_failed(job_id, str(exc))
+        return jsonify({"job_id": job_id, "status": "failed", "error": str(exc)}), 502
+
+    return jsonify({"job_id": job_id, "status": "processing"}), 202
 
 
 @api_bp.get("/jobs/<job_id>")
@@ -94,3 +109,52 @@ def get_gallery() -> tuple:
 
     rows = _repo().list_completed_jobs(limit=limit)
     return jsonify({"items": [to_api_job(row) for row in rows]}), 200
+
+
+@api_bp.delete("/jobs/<job_id>")
+def delete_job(job_id: str) -> tuple:
+    row = _repo().get_job(job_id)
+    if not row:
+        return jsonify({"error": "job not found"}), 404
+
+    sketch_key = str(row.get("sketch_path") or "").strip()
+    result_key = str(row.get("result_path") or "").strip()
+
+    try:
+        delete_object(result_key)
+        if sketch_key and sketch_key != result_key:
+            delete_object(sketch_key)
+    except StorageError as exc:
+        return jsonify({"error": str(exc)}), 502
+
+    _repo().delete_job(job_id)
+    return jsonify({"job_id": job_id, "status": "deleted"}), 200
+
+
+@api_bp.post("/internal/ray/jobs/<job_id>/result")
+def ray_job_result(job_id: str) -> tuple:
+    token = settings.ray_shared_token.strip()
+    if token:
+        auth = request.headers.get("Authorization", "")
+        if auth != f"Bearer {token}":
+            return jsonify({"error": "unauthorized"}), 401
+
+    row = _repo().get_job(job_id)
+    if not row:
+        return jsonify({"error": "job not found"}), 404
+
+    payload = request.get_json(silent=True) or {}
+    status = str(payload.get("status", "")).strip().lower()
+    if status not in {"completed", "failed"}:
+        return jsonify({"error": "status must be 'completed' or 'failed'"}), 400
+
+    if status == "completed":
+        result_key = str(payload.get("result_key", row.get("result_path") or "")).strip()
+        if not result_key:
+            return jsonify({"error": "result_key is required for completed status"}), 400
+        _repo().mark_completed(job_id, result_key)
+        return jsonify({"job_id": job_id, "status": "completed"}), 200
+
+    error = str(payload.get("error", "ray generation failed")).strip() or "ray generation failed"
+    _repo().mark_failed(job_id, error)
+    return jsonify({"job_id": job_id, "status": "failed", "error": error}), 200

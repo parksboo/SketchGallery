@@ -8,8 +8,9 @@ This webserver is a single Flask app that serves:
   - `GET /api/v1/jobs/<id>`
   - `GET /api/v1/jobs/<id>/result`
   - `GET /api/v1/gallery`
+  - `POST /api/v1/internal/ray/jobs/<job_id>/result` (Ray callback)
 
-It uses PostgreSQL for metadata and Google Cloud Storage for image objects.
+It uses PostgreSQL for metadata, Google Cloud Storage for image objects, and an externally-managed Ray cluster for generation.
 
 ## Local run
 ```bash
@@ -25,6 +26,9 @@ export PGPASSWORD=sketchgallery
 export GCS_BUCKET=your-bucket
 export GCS_UPLOAD_URL_EXPIRE_SEC=600
 export GCS_DOWNLOAD_URL_EXPIRE_SEC=600
+export RAY_GENERATION_URL=https://ray.example.com/generate
+export RAY_SHARED_TOKEN=your-shared-token
+export WEB_PUBLIC_BASE_URL=https://web.example.com
 
 python3 src/webserver/app.py
 ```
@@ -37,11 +41,15 @@ docker build -f src/webserver/Dockerfile -t sketchgallery-web:latest .
 
 ## Deploy to Kubernetes
 ```bash
-GCS_BUCKET=your-bucket ./scripts/k8s-stack.sh up
+GCS_BUCKET=your-bucket \
+RAY_GENERATION_URL=https://ray.example.com/generate \
+RAY_SHARED_TOKEN=your-shared-token \
+WEB_PUBLIC_BASE_URL=https://web.example.com \
+./scripts/k8s-stack.sh up
 ./scripts/k8s-stack.sh status
 ```
 
 ## GCS IAM / CORS notes
 - The webserver identity must be able to sign URLs (`iam.serviceAccounts.signBlob` via Service Account Token Creator or equivalent).
-- The same identity must have object access for copy/read/write in the target bucket.
+- The webserver identity must have permissions needed for signed URL issuance and metadata access.
 - Bucket CORS must allow browser `PUT` for direct upload.
