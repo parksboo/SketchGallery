@@ -9,8 +9,9 @@ from webserver.services.storage import StorageError, issue_download_url
 def to_ui_job(row: Dict[str, Any]) -> Dict[str, Any]:
     sketch_key = row.get("sketch_path") or ""
     generated_key = row.get("result_path") or ""
+    status = row.get("status") or "queued"
     sketch_url = _safe_signed_url(sketch_key)
-    generated_url = _safe_signed_url(generated_key)
+    generated_url = _safe_signed_url(generated_key) if status == "completed" else ""
     return {
         "id": str(row["id"]),
         "title": row.get("title") or "Untitled Concept",
@@ -21,10 +22,10 @@ def to_ui_job(row: Dict[str, Any]) -> Dict[str, Any]:
         "generated_key": generated_key,
         "sketch_url": sketch_url,
         "generated_url": generated_url,
-        "status": row.get("status") or "queued",
+        "status": status,
         "created_at": row.get("created_at"),
         "updated_at": row.get("updated_at"),
-        "progress": 100 if (row.get("status") == "completed") else 0,
+        "progress": _progress_for_status(status),
     }
 
 
@@ -80,3 +81,13 @@ def _safe_signed_url(object_key: str) -> str:
         return issue_download_url(object_key)
     except StorageError:
         return ""
+
+
+def _progress_for_status(status: str) -> int:
+    if status == "completed":
+        return 100
+    if status == "processing":
+        return 55
+    if status == "queued":
+        return 15
+    return 0
