@@ -22,6 +22,10 @@ class Settings:
     gcs_bucket: str = os.getenv("GCS_BUCKET", "")
     gcs_upload_url_expire_sec: int = int(os.getenv("GCS_UPLOAD_URL_EXPIRE_SEC", "600"))
     gcs_download_url_expire_sec: int = int(os.getenv("GCS_DOWNLOAD_URL_EXPIRE_SEC", "600"))
+    ray_generation_url: str = os.getenv("RAY_GENERATION_URL", "")
+    ray_request_timeout_sec: int = int(os.getenv("RAY_REQUEST_TIMEOUT_SEC", "5"))
+    ray_shared_token: str = os.getenv("RAY_SHARED_TOKEN", "")
+    web_public_base_url: str = os.getenv("WEB_PUBLIC_BASE_URL", "")
 
     @property
     def templates_dir(self) -> Path:

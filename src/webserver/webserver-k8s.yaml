@@ -64,6 +64,14 @@ spec:
               value: "600"
             - name: GCS_DOWNLOAD_URL_EXPIRE_SEC
               value: "600"
+            - name: RAY_GENERATION_URL
+              value: "REPLACE_WITH_RAY_GENERATION_URL"
+            - name: RAY_REQUEST_TIMEOUT_SEC
+              value: "5"
+            - name: RAY_SHARED_TOKEN
+              value: "REPLACE_WITH_RAY_SHARED_TOKEN"
+            - name: WEB_PUBLIC_BASE_URL
+              value: "REPLACE_WITH_WEB_PUBLIC_BASE_URL"
             - name: GOOGLE_APPLICATION_CREDENTIALS
               value: /var/secrets/google/key.json
           volumeMounts:
