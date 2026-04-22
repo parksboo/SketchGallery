@@ -12,7 +12,7 @@ class Settings:
     gcs_bucket: str = os.getenv("GCS_BUCKET", "")
     ray_shared_token: str = os.getenv("RAY_SHARED_TOKEN", "")
     callback_timeout_sec: int = int(os.getenv("CALLBACK_TIMEOUT_SEC", "30"))
-    ray_address: str = os.getenv("RAY_ADDRESS", "auto")
+    ray_address: str = os.getenv("RAY_ADDRESS", "")
     ray_namespace: str = os.getenv("RAY_NAMESPACE", "sketchgallery")
     ray_get_timeout_sec: int = int(os.getenv("RAY_GET_TIMEOUT_SEC", "300"))
     hf_provider: str = os.getenv("HF_PROVIDER", "replicate")

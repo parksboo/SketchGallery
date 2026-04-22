@@ -82,7 +82,6 @@ def generate_image_remote(
     return {
         "status": "completed",
         "result_key": result_key,
-        "used_prompt": final_prompt,
     }
 
 

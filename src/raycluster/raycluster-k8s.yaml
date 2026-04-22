@@ -44,33 +44,58 @@ spec:
             - name: RAY_SHARED_TOKEN
               value: REPLACE_WITH_RAY_SHARED_TOKEN
             - name: CALLBACK_TIMEOUT_SEC
-              value: "5"
+              value: "REPLACE_WITH_CALLBACK_TIMEOUT_SEC"
             - name: RAY_ADDRESS
               value: "REPLACE_WITH_RAY_ADDRESS"
             - name: RAY_NAMESPACE
-              value: "sketchgallery"
+              value: "REPLACE_WITH_RAY_NAMESPACE"
             - name: RAY_GET_TIMEOUT_SEC
-              value: "300"
+              value: "REPLACE_WITH_RAY_GET_TIMEOUT_SEC"
+            - name: HF_TOKEN
+              value: "REPLACE_WITH_HF_TOKEN"
             - name: GOOGLE_APPLICATION_CREDENTIALS
               value: /var/secrets/google/key.json
+          resources:
+            requests:
+              cpu: "250m"
+              memory: "512Mi"
+            limits:
+              cpu: "2"
+              memory: "2Gi"
           volumeMounts:
             - name: gcp-sa-key
               mountPath: /var/secrets/google
               readOnly: true
+            - name: dshm
+              mountPath: /dev/shm
+          startupProbe:
+            httpGet:
+              path: /health
+              port: 8000
+            failureThreshold: 30
+            periodSeconds: 5
+            timeoutSeconds: 2
           readinessProbe:
             httpGet:
               path: /health
               port: 8000
-            initialDelaySeconds: 5
+            initialDelaySeconds: 10
             periodSeconds: 5
+            timeoutSeconds: 2
+            failureThreshold: 6
           livenessProbe:
             httpGet:
               path: /health
               port: 8000
-            initialDelaySeconds: 15
+            initialDelaySeconds: 30
             periodSeconds: 10
+            timeoutSeconds: 2
+            failureThreshold: 6
       volumes:
         - name: gcp-sa-key
           secret:
             secretName: gcp-sa-key
             optional: true
+        - name: dshm
+          emptyDir:
+            medium: Memory
