@@ -421,6 +421,32 @@ h2 {
   object-fit: cover;
 }
 
+.image-placeholder {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.image-placeholder.processing {
+  background: radial-gradient(circle at 30% 30%, #fef3c7, #e0f2fe);
+}
+
+.image-placeholder.failed {
+  background: #fee2e2;
+  color: #991b1b;
+  font-weight: 800;
+}
+
+.spin-word {
+  display: inline-block;
+  font-weight: 900;
+  letter-spacing: 0.12em;
+  color: #1e3a8a;
+  animation: rotate-word 1.8s linear infinite;
+}
+
 .art-body {
   padding: 12px;
 }
@@ -610,6 +636,15 @@ h2 {
 @keyframes drift {
   from { transform: translateY(0px); }
   to { transform: translateY(14px); }
+}
+
+@keyframes rotate-word {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 @media (max-width: 900px) {

@@ -19,7 +19,17 @@
     </div>
     <div class="image-slot">
       <span>Generated</span>
-      <img src="{{ job.generated_url }}" alt="Generated result for {{ job.title }}">
+      {% if job.status in ['processing', 'queued'] %}
+        <div class="image-placeholder processing" aria-live="polite">
+          <span class="spin-word">PROCESSING</span>
+        </div>
+      {% elif job.status == 'completed' %}
+        <img src="{{ job.generated_url }}" alt="Generated result for {{ job.title }}">
+      {% else %}
+        <div class="image-placeholder failed">
+          <span>FAILED</span>
+        </div>
+      {% endif %}
     </div>
   </div>
 
