@@ -1,0 +1,1 @@
+pytest -q tests/unit
