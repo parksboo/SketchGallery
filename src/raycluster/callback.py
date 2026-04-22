@@ -20,7 +20,7 @@ def send_callback(
     error: str = "",
 ) -> None:
     if not callback_url:
-        return
+        raise CallbackError("callback_url is empty")
 
     payload: dict[str, str] = {"status": status}
     if status == "completed":

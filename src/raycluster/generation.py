@@ -1,4 +1,10 @@
-from __future__ import annotations
+from pathlib import Path
+import sys
+
+SRC_ROOT = Path(__file__).resolve().parents[1]
+if str(SRC_ROOT) not in sys.path:
+    sys.path.append(str(SRC_ROOT))
+
 
 import os
 from io import BytesIO
@@ -6,7 +12,7 @@ from threading import Lock
 
 import ray
 from huggingface_hub import InferenceClient
-from ray.exceptions import GetTimeoutError
+from ray.exceptions import GetTimeoutError, RayTaskError
 
 from raycluster.callback import CallbackError, send_callback
 from raycluster.config import settings
@@ -94,9 +100,21 @@ def run_generation(
     final_prompt: str,
     mode: str,
 ) -> None:
-    _ensure_ray_initialized()
 
     try:
+        if mode == "test":
+            copy_object(sketch_key, result_key)
+            send_callback(
+                callback_url=callback_url,
+                callback_token=callback_token,
+                status="completed",
+                result_key=result_key,
+            )
+            return
+
+
+        _ensure_ray_initialized()
+
         obj_ref = generate_image_remote.remote(
             sketch_key=sketch_key,
             result_key=result_key,
@@ -138,11 +156,41 @@ def _ensure_ray_initialized() -> None:
             return
 
         try:
+            init_kwargs = {
+                "namespace": settings.ray_namespace,
+                "ignore_reinit_error": True,
+            }
+
+            ray_address = (settings.ray_address or "").strip()
+            if ray_address:
+                init_kwargs["address"] = ray_address
+
+            ray.init(**init_kwargs)
+        except Exception as exc:
+            raise GenerationError(f"failed to initialize ray: {exc}") from exc
+
+        _ray_ready = True
+
+'''
+def _ensure_ray_initialized() -> None:
+    global _ray_ready
+
+    if _ray_ready:
+        return
+
+    with _init_lock:
+        if _ray_ready:
+            return
+        if ray.is_initialized():
+            _ray_ready = True
+            return
+
+        try:
             ray.init(address=settings.ray_address, namespace=settings.ray_namespace, ignore_reinit_error=True)
         except Exception as exc:  # noqa: BLE001
             raise GenerationError(f"failed to initialize ray: {exc}") from exc
         _ray_ready = True
-
+'''
 
 def _try_failed_callback(*, callback_url: str, callback_token: str, error: str) -> None:
     try:

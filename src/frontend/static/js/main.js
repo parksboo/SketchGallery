@@ -73,6 +73,36 @@
     preserveScrollOnNavigate('.museum-nav');
   }
 
+  const jobMatch = window.location.pathname.match(/^\/jobs\/([0-9a-f-]+)$/i);
+  if (jobMatch) {
+    const jobId = jobMatch[1];
+    const badge = document.querySelector('.badge');
+
+    if (badge && !['completed', 'failed'].includes(badge.textContent.trim().toLowerCase())) {
+      const poll = window.setInterval(async function () {
+        try {
+          const response = await fetch('/api/v1/jobs/' + jobId, {
+            headers: { 'Accept': 'application/json' }
+          });
+
+          if (!response.ok) {
+            return;
+          }
+
+          const job = await response.json();
+          const status = (job.status || '').toLowerCase();
+
+          if (status === 'completed' || status === 'failed') {
+            window.clearInterval(poll);
+            window.location.reload();
+          }
+        } catch (err) {
+          console.error('Job polling failed:', err);
+        }
+      }, 2000);
+    }
+  }
+
   const createForm = document.getElementById('create-form');
   if (!createForm) {
     return;

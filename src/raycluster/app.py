@@ -80,6 +80,15 @@ def create_app() -> Flask:
             style=style,
         )
 
+        app.logger.warning(
+            "generate request job_id=%s mode=%s callback_url=%s sketch_key=%s result_key=%s",
+            job_id,
+            mode,
+            callback_url,
+            sketch_key,
+            result_key,
+        )
+
         Thread(
             target=_run_generation_background,
             kwargs={
