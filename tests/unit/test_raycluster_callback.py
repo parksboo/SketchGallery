@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+from dataclasses import replace
 from urllib.error import URLError
 
 import pytest
@@ -34,8 +35,11 @@ def test_send_callback_posts_completed_payload(monkeypatch):
         return DummyResponse(status=200)
 
     monkeypatch.setattr(callback_module, 'urlopen', fake_urlopen)
-    monkeypatch.setattr(callback_module.settings, 'callback_timeout_sec', 12)
-    monkeypatch.setattr(callback_module.settings, 'ray_shared_token', '')
+    monkeypatch.setattr(
+        callback_module,
+        "settings",
+        replace(callback_module.settings, callback_timeout_sec=12, ray_shared_token=''),
+    )
 
     callback_module.send_callback(
         callback_url='http://web/callback',
@@ -50,12 +54,22 @@ def test_send_callback_posts_completed_payload(monkeypatch):
     assert captured['timeout'] == 12
 
 
-def test_send_callback_noop_without_url():
-    callback_module.send_callback(callback_url='', callback_token='', status='completed', result_key='x')
+def test_send_callback_without_url_raises():
+    with pytest.raises(callback_module.CallbackError, match='callback_url is empty'):
+        callback_module.send_callback(
+            callback_url='',
+            callback_token='',
+            status='completed',
+            result_key='x',
+        )
 
 
 def test_send_callback_wraps_connection_errors(monkeypatch):
-    monkeypatch.setattr(callback_module, 'urlopen', lambda req, timeout: (_ for _ in ()).throw(URLError('boom')))
+    monkeypatch.setattr(
+        callback_module,
+        'urlopen',
+        lambda req, timeout: (_ for _ in ()).throw(URLError('boom')),
+    )
 
     with pytest.raises(callback_module.CallbackError, match='connection error'):
         callback_module.send_callback(

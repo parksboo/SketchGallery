@@ -1,7 +1,8 @@
 from __future__ import annotations
 
 import json
-from urllib.error import HTTPError, URLError
+from dataclasses import replace
+from urllib.error import URLError
 
 import pytest
 
@@ -24,10 +25,17 @@ class DummyResponse:
 
 
 def test_dispatch_generation_job_builds_payload_and_headers(monkeypatch):
-    monkeypatch.setattr(generation_service.settings, 'ray_generation_url', 'http://ray/generate')
-    monkeypatch.setattr(generation_service.settings, 'web_public_base_url', 'http://web:5050')
-    monkeypatch.setattr(generation_service.settings, 'ray_shared_token', 'shared-secret')
-    monkeypatch.setattr(generation_service.settings, 'ray_request_timeout_sec', 7)
+    monkeypatch.setattr(
+        generation_service,
+        "settings",
+        replace(
+            generation_service.settings,
+            ray_generation_url="http://ray/generate",
+            web_public_base_url="http://web:5050",
+            ray_shared_token="shared-secret",
+            ray_request_timeout_sec=7,
+        ),
+    )
 
     captured = {}
 
@@ -60,7 +68,12 @@ def test_dispatch_generation_job_builds_payload_and_headers(monkeypatch):
 
 
 def test_dispatch_generation_job_requires_endpoint(monkeypatch):
-    monkeypatch.setattr(generation_service.settings, 'ray_generation_url', '')
+    monkeypatch.setattr(
+        generation_service,
+        "settings",
+        replace(generation_service.settings, ray_generation_url=""),
+    )
+
     with pytest.raises(generation_service.GenerationDispatchError):
         generation_service.dispatch_generation_job(
             job_id='job-1',
@@ -74,8 +87,16 @@ def test_dispatch_generation_job_requires_endpoint(monkeypatch):
 
 
 def test_dispatch_generation_job_wraps_url_errors(monkeypatch):
-    monkeypatch.setattr(generation_service.settings, 'ray_generation_url', 'http://ray/generate')
-    monkeypatch.setattr(generation_service, 'urlopen', lambda request, timeout: (_ for _ in ()).throw(URLError('boom')))
+    monkeypatch.setattr(
+        generation_service,
+        "settings",
+        replace(generation_service.settings, ray_generation_url="http://ray/generate"),
+    )
+    monkeypatch.setattr(
+        generation_service,
+        'urlopen',
+        lambda request, timeout: (_ for _ in ()).throw(URLError('boom')),
+    )
 
     with pytest.raises(generation_service.GenerationDispatchError, match='connection error'):
         generation_service.dispatch_generation_job(
@@ -87,3 +108,4 @@ def test_dispatch_generation_job_wraps_url_errors(monkeypatch):
             style='Cinematic',
             mode='test',
         )
+

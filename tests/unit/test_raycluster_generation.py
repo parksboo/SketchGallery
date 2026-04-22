@@ -1,7 +1,8 @@
 from __future__ import annotations
 
-import pytest
+from dataclasses import replace
 
+import pytest
 from ray.exceptions import GetTimeoutError
 
 from raycluster import generation
@@ -74,7 +75,11 @@ def test_run_generation_timeout_marks_failed(monkeypatch):
 
 
 def test_call_api_requires_token(monkeypatch):
-    monkeypatch.setattr(generation.settings, 'hf_token_env', 'HF_TOKEN')
+    monkeypatch.setattr(
+        generation,
+        "settings",
+        replace(generation.settings, hf_token_env='HF_TOKEN'),
+    )
     monkeypatch.delenv('HF_TOKEN', raising=False)
 
     with pytest.raises(generation.GenerationError, match='missing Hugging Face token env'):
@@ -83,3 +88,4 @@ def test_call_api_requires_token(monkeypatch):
             result_key='results/out.png',
             final_prompt='prompt',
         )
+
