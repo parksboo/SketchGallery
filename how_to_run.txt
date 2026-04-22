@@ -1,0 +1,15 @@
+temp 파일
+
+
+1. Google Cloud VM 권한 이미 줬으니 VM terminal 들어가서
+
+2. 서버 실행
+2-1. ./ray.sh
+2-2. ./web.sh
+
+
+3. http://external_ip:5050 으로 접속
+
+4. unit test는 pytest.py
+
+
