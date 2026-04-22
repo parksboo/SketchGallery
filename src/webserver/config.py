@@ -27,7 +27,6 @@ class Settings:
     ray_shared_token: str = os.getenv("RAY_SHARED_TOKEN", "")
     web_public_base_url: str = os.getenv("WEB_PUBLIC_BASE_URL", "")
     default_generation_mode: str = os.getenv("DEFAULT_GENERATION_MODE", "test")
-    mode: str = os.getenv("MODE", "test")
 
     @property
     def templates_dir(self) -> Path:
