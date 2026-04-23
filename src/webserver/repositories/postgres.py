@@ -58,7 +58,9 @@ class PostgresRepository:
                 "ALTER TABLE jobs ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()"
             )
             cur.execute("CREATE INDEX IF NOT EXISTS idx_jobs_status ON jobs(status)")
-            cur.execute("CREATE INDEX IF NOT EXISTS idx_jobs_updated_at ON jobs(updated_at DESC)")
+            cur.execute(
+                "CREATE INDEX IF NOT EXISTS idx_jobs_updated_at ON jobs(updated_at DESC)"
+            )
             con.commit()
 
     def create_job(
@@ -79,7 +81,16 @@ class PostgresRepository:
                 (id, title, prompt, style, sketch_name, sketch_path, result_path, status, error, created_at, updated_at)
                 VALUES (%s, %s, %s, %s, %s, %s, %s, %s, NULL, NOW(), NOW())
                 """,
-                (job_id, title, prompt, style, sketch_name, sketch_path, result_path, status),
+                (
+                    job_id,
+                    title,
+                    prompt,
+                    style,
+                    sketch_name,
+                    sketch_path,
+                    result_path,
+                    status,
+                ),
             )
             con.commit()
 

@@ -48,6 +48,8 @@ def send_callback(
                 raise CallbackError(f"callback failed status={status_code} body={raw}")
     except HTTPError as exc:
         raw = exc.read().decode("utf-8", errors="replace")
-        raise CallbackError(f"callback http error status={exc.code} body={raw}") from exc
+        raise CallbackError(
+            f"callback http error status={exc.code} body={raw}"
+        ) from exc
     except URLError as exc:
         raise CallbackError(f"callback connection error: {exc.reason}") from exc

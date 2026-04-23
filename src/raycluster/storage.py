@@ -50,7 +50,9 @@ def read_object_bytes(object_key: str) -> bytes:
         raise StorageError(f"failed to read GCS object '{object_key}': {exc}") from exc
 
 
-def write_object_bytes(object_key: str, data: bytes, content_type: str = "image/png") -> None:
+def write_object_bytes(
+    object_key: str, data: bytes, content_type: str = "image/png"
+) -> None:
     bucket = set_bucket()
     blob = bucket.blob(object_key)
     try:

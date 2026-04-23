@@ -1,5 +1,5 @@
-from pathlib import Path
 import sys
+from pathlib import Path
 
 SRC_ROOT = Path(__file__).resolve().parents[1]
 if str(SRC_ROOT) not in sys.path:
@@ -12,11 +12,16 @@ from threading import Lock
 
 import ray
 from huggingface_hub import InferenceClient
-from ray.exceptions import GetTimeoutError, RayTaskError
+from ray.exceptions import GetTimeoutError
 
 from raycluster.callback import CallbackError, send_callback
 from raycluster.config import settings
-from raycluster.storage import StorageError, copy_object, read_object_bytes, write_object_bytes
+from raycluster.storage import (
+    StorageError,
+    copy_object,
+    read_object_bytes,
+    write_object_bytes,
+)
 
 
 class GenerationError(RuntimeError):
@@ -83,7 +88,9 @@ def generate_image_remote(
     if mode == "test":
         copy_object(sketch_key, result_key)
     else:
-        _call_api(sketch_key=sketch_key, result_key=result_key, final_prompt=final_prompt)
+        _call_api(
+            sketch_key=sketch_key, result_key=result_key, final_prompt=final_prompt
+        )
 
     return {
         "status": "completed",
@@ -112,7 +119,6 @@ def run_generation(
             )
             return
 
-
         _ensure_ray_initialized()
 
         obj_ref = generate_image_remote.remote(
@@ -138,7 +144,9 @@ def run_generation(
         )
         raise GenerationError("ray.get timed out") from exc
     except (StorageError, CallbackError, RuntimeError) as exc:
-        _try_failed_callback(callback_url=callback_url, callback_token=callback_token, error=str(exc))
+        _try_failed_callback(
+            callback_url=callback_url, callback_token=callback_token, error=str(exc)
+        )
         raise GenerationError(str(exc)) from exc
 
 
@@ -171,7 +179,8 @@ def _ensure_ray_initialized() -> None:
 
         _ray_ready = True
 
-'''
+
+"""
 def _ensure_ray_initialized() -> None:
     global _ray_ready
 
@@ -190,7 +199,8 @@ def _ensure_ray_initialized() -> None:
         except Exception as exc:  # noqa: BLE001
             raise GenerationError(f"failed to initialize ray: {exc}") from exc
         _ray_ready = True
-'''
+"""
+
 
 def _try_failed_callback(*, callback_url: str, callback_token: str, error: str) -> None:
     try:
@@ -219,7 +229,7 @@ def _call_api(*, sketch_key: str, result_key: str, final_prompt: str) -> None:
     )
 
     image = client.image_to_image(
-        image = input_image,
+        image=input_image,
         prompt=final_prompt,
         model=settings.hf_model,
     )

@@ -20,7 +20,7 @@ def dispatch_generation_job(
     title: str,
     prompt: str,
     style: str,
-    mode:str,
+    mode: str,
 ) -> Dict[str, Any]:
     endpoint = settings.ray_generation_url.strip()
     if not endpoint:
@@ -35,12 +35,14 @@ def dispatch_generation_job(
         "title": title,
         "prompt": prompt,
         "style": style,
-        "mode":mode,
+        "mode": mode,
     }
 
     public_base = settings.web_public_base_url.strip().rstrip("/")
     if public_base:
-        payload["callback_url"] = f"{public_base}/api/v1/internal/ray/jobs/{job_id}/result"
+        payload["callback_url"] = (
+            f"{public_base}/api/v1/internal/ray/jobs/{job_id}/result"
+        )
 
     headers = {"Content-Type": "application/json"}
     if settings.ray_shared_token:
@@ -80,6 +82,8 @@ def dispatch_generation_job(
             f"ray dispatch http error status={exc.code}, body={raw or '<empty>'}"
         ) from exc
     except URLError as exc:
-        raise GenerationDispatchError(f"ray dispatch connection error: {exc.reason}") from exc
+        raise GenerationDispatchError(
+            f"ray dispatch connection error: {exc.reason}"
+        ) from exc
     except TimeoutError as exc:
         raise GenerationDispatchError("ray dispatch timed out") from exc

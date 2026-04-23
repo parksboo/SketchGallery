@@ -1,8 +1,8 @@
 from __future__ import annotations
 
 import sys
-from threading import Thread
 from pathlib import Path
+from threading import Thread
 
 from flask import Flask, jsonify, request
 
@@ -11,7 +11,11 @@ if str(ROOT) not in sys.path:
     sys.path.append(str(ROOT))
 
 from raycluster.config import settings
-from raycluster.generation import GenerationError, build_generation_prompt, run_generation
+from raycluster.generation import (
+    GenerationError,
+    build_generation_prompt,
+    run_generation,
+)
 
 
 def _authorized() -> bool:
@@ -45,7 +49,9 @@ def create_app() -> Flask:
                 mode=mode,
             )
         except GenerationError as exc:
-            app.logger.error("background generation failed job_id=%s error=%s", job_id, exc)
+            app.logger.error(
+                "background generation failed job_id=%s error=%s", job_id, exc
+            )
 
     @app.get("/health")
     def health() -> tuple:
@@ -64,7 +70,9 @@ def create_app() -> Flask:
         callback_token = str(payload.get("callback_token", "")).strip()
         prompt = str(payload.get("prompt", "")).strip()
         style = str(payload.get("style", "Cinematic")).strip() or "Cinematic"
-        title = str(payload.get("title", "Untitled Artwork")).strip() or "Untitled Artwork"
+        title = (
+            str(payload.get("title", "Untitled Artwork")).strip() or "Untitled Artwork"
+        )
         mode = str(payload.get("mode", "test")).strip() or "test"
 
         if not job_id:

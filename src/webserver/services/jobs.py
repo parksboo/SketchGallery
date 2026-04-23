@@ -50,7 +50,9 @@ def to_api_job(row: Dict[str, Any]) -> Dict[str, Any]:
 
 def select_featured(
     items: List[Dict[str, Any]], selected_job_id: str
-) -> Tuple[Optional[Dict[str, Any]], Optional[Dict[str, Any]], Optional[Dict[str, Any]]]:
+) -> Tuple[
+    Optional[Dict[str, Any]], Optional[Dict[str, Any]], Optional[Dict[str, Any]]
+]:
     if not items:
         return None, None, None
 
