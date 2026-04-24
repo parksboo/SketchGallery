@@ -149,7 +149,6 @@ def run_generation(
         )
         raise GenerationError(str(exc)) from exc
 
-
 def _ensure_ray_initialized() -> None:
     global _ray_ready
 

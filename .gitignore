@@ -211,3 +211,4 @@ data/*.db
 marimo/_static/
 marimo/_lsp/
 __marimo__/
+ray.sh
